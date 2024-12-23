@@ -10,8 +10,13 @@
         <result property="stuPass" column="stu_pass"/>
     </resultMap>
 
+    <!--登录功能-->
     <select id="login" resultType="org.lanqiao.studentscore_system.pojo.TStudent" resultMap="TStudentResultMap">
         select * from t_student where student_no = #{studentNo} and stu_pass = #{password}
+    </select>
+
+    <select id="getAllStudent" resultType="org.lanqiao.studentscore_system.pojo.TStudent" resultMap="TStudentResultMap">
+        select * from t_student
     </select>
 
 
