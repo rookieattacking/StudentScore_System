@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>后台登录</title>
+		<link rel="stylesheet" type="text/css" href="admin/layui/css/layui.css" />
+		<link rel="stylesheet" type="text/css" href="admin/css/login.css" />
+		<script src="js/aJaxUtil.js"></script>
+<!--		<script src="js/jquery-3.3.1.min.js"></script>-->
+	</head>
+
+	<body>
+		<div class="m-login-bg">
+			<div class="m-login">
+				<h3>单科学生成绩管理查询系统</h3>
+				<div class="m-login-warp">
+					<form class="layui-form" onsubmit="return false">
+						<div class="layui-form-item">
+							<input type="text" name="userName" required lay-verify="required" placeholder="用户名" autocomplete="off" class="layui-input" id="userName">
+						</div>
+						<div class="layui-form-item">
+							<input type="password" name="password" required lay-verify="required" placeholder="密码" autocomplete="off" class="layui-input" id="password">
+						</div>
+						<div class="layui-form-item">
+							<input type="radio" name="type" value="1" title="教师" checked="" >
+      						<input type="radio" name="type" value="2" title="学生">
+						</div>
+						<div class="layui-form-item m-login-btn">
+							<div class="layui-inline">
+								<button class="layui-btn layui-btn-normal" onclick="login()" type="button">登录</button>
+							</div>
+							<div class="layui-inline">
+								<button type="reset" class="layui-btn layui-btn-primary">取消</button>
+							</div>
+						</div>
+					</form>
+				</div>
+				<p class="copyright">Copyright 2018-2021 by 学生单科成绩管理系统</p>
+			</div>
+		</div>
+		<script src="admin/layui/layui.all.js" type="text/javascript" charset="utf-8"></script>
+	</body>
+<script src="js/axios.js"></script>
+<script>
+	// 监听用户名输入框的变化
+	document.getElementById("userName").addEventListener("input", function() {
+		if (this.value && this.value.trim()) {
+			this.style.borderColor = "";
+			this.placeholder = "用户名";
+		}
+	});
+
+	// 监听密码输入框的变化
+	document.getElementById("password").addEventListener("input", function() {
+		if (this.value && this.value.trim()) {
+			this.style.borderColor = "";
+			this.placeholder = "密码";
+		}
+	});
+
+	function login(){
+		// 获取用户名和密码元素
+		let inputName = document.getElementById("userName");
+		let inputPassword = document.getElementById("password");
+		let myChecked = document.querySelector('input[name="type"]:checked').value;
+
+		// 检查用户名
+		if (!userName.value || !userName.value.trim()) {
+			userName.value = ""; // 清空输入
+			userName.placeholder = "用户名不能为空";
+			userName.style.borderColor = "red";
+			return;
+		}
+
+		// 检查密码
+		if (!password.value || !password.value.trim()) {
+			password.value = ""; // 清空输入
+			password.placeholder = "密码不能为空";
+			password.style.borderColor = "red";
+			return;
+		}
+
+		if(myChecked == 2) {
+			if(!isNumber(userName.value)) {
+				userName.value = '';
+				userName.placeholder = "学生角色登录请使用学号!";
+				userName.style.borderColor = 'red';
+				return;
+			}
+			axios({
+				url:"http://localhost:8080/user/studentlogin",
+				method:"post",
+				data:{
+					studentNo: inputName.value,
+					password: inputPassword.value,
+				}
+			}).then(res => {
+				console.log(res)
+				if(res.data.code == 200){
+						location.href = "/student-index.html";
+					}else if(res.data.code == 405){
+					alert("用户名或密码错误")
+				}
+			}).catch(err => {
+				alert("登录失败,请稍后重试");
+			})
+		} else if(myChecked == 1){
+			axios({
+				url:"http://localhost:8080/user/login",
+				method:"post",
+				data:{
+					userName: inputName.value,
+					password: inputPassword.value,
+				}
+			}).then(res => {
+				console.log(res)
+				if(res.data.code == 200){ // 修改为严格相等
+					location.href = "/index.html";
+				}else if(res.data.code == 405){ // 修改为严格相等
+					alert("用户名或密码错误")
+				}
+			}).catch(err => {
+				alert("登录失败,请稍后重试");
+			})
+		}
+	}
+	// 判断用户输入的是否为纯数字
+	function isNumber(value) {
+		return /^\d+$/.test(value);
+	}
+</script>
+</html>
