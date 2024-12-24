@@ -1,68 +1,285 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<meta charset="UTF-8">
-<meta name="renderer" content="webkit">
-<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<meta name="viewport"
-	content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
-<title>网站后台管理模版</title>
-<link rel="stylesheet" type="text/css"
-	href="admin/layui/css/layui.css" />
-<link rel="stylesheet" type="text/css" href="admin/css/admin.css" />
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<title>学生成绩信息管理界面</title>
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<style>
+		.page-content-wrap {
+			padding: 20px;
+		}
+		.header {
+			text-align: center;
+			font-size: 20px;
+			line-height: 25px;
+			color: #666;
+			margin-bottom: 20px;
+		}
+		.search-box {
+			margin-bottom: 20px;
+		}
+	</style>
 </head>
-
 <body>
-	<div class="page-content-wrap" id="studentSearch">
-	<h5 style="text-align:center;font-size: 20px;line-height: 25px;color:#666">学生成绩信息管理界面</h5>
-		<hr>
-		<div class="layui-form-item">
-			<div class="layui-inline tool-btn">
-				<button class="layui-btn layui-btn-small site-demo-active"
-					data-type="tabAdd">
-					<i class="layui-icon">&#xe654;</i>
-				</button>
-<!-- 				<button
-					class="layui-btn layui-btn-small layui-btn-warm listOrderBtn hidden-xs"
-					data-url="/admin/category/listorderall.html">
-					<i class="iconfont">&#xe656;</i>
-				</button> -->
-			</div>
-			<div class="layui-inline">
-				<input type="text" id="studentNameSearch" placeholder="请输入学生姓名"
-					autocomplete="off" class="layui-input">
-			</div>
-			<button class="layui-btn layui-btn-normal site-demo-active"
-					data-type="search" id="searchStudent">搜索</button>
-			<table class="layui-table"
-				lay-data="{ url:'/score/getAllScore', page:true, id:'scoreTest'}"
-				lay-filter="demo">
-				<thead>
-					<tr>
-						<th lay-data="{type:'checkbox', }"></th>
-						<th lay-data="{field:'scoreId',sort: true}">成绩编号</th>
-						<th lay-data="{field:'studentName'}">姓名</th>
-						<th lay-data="{field:'scoreTypeName'}">考试类型</th>
-						<th lay-data="{field:'scoreValue'}">成绩</th>
-						<th
-							lay-data="{fixed: 'right', width:220, align:'left', toolbar: '#barDemo'}"></th>
-					</tr>
-				</thead>
-			</table>
+<div id="app">
+	<div class="page-content-wrap">
+		<h5 class="header">学生成绩信息管理界面</h5>
+		<el-divider></el-divider>
+
+		<!-- 搜索和添加区域 -->
+		<div class="search-box">
+			<el-row :gutter="20">
+				<el-col :span="2">
+					<el-button type="primary" size="small" @click="handleAdd">
+						<i class="el-icon-plus"></i>
+					</el-button>
+				</el-col>
+				<el-col :span="6">
+					<el-input
+							v-model="searchName"
+							placeholder="请输入学生姓名"
+							clearable
+							@keyup.enter.native="handleSearch">
+					</el-input>
+				</el-col>
+				<el-col :span="2">
+					<el-button type="primary" @click="handleSearch">搜索</el-button>
+				</el-col>
+			</el-row>
 		</div>
 
+		<!-- 表格区域 -->
+		<el-table
+				:data="tableData"
+				border
+				style="width: 100%"
+				@selection-change="handleSelectionChange">
+			<el-table-column
+					type="selection"
+					width="55">
+			</el-table-column>
+			<el-table-column
+					prop="scoreId"
+					label="成绩编号"
+					sortable>
+			</el-table-column>
+			<el-table-column
+					prop="studentName"
+					label="姓名">
+			</el-table-column>
+			<el-table-column
+					prop="scoreTypeName"
+					label="考试类型">
+			</el-table-column>
+			<el-table-column
+					prop="scoreValue"
+					label="成绩">
+			</el-table-column>
+			<el-table-column
+					label="操作"
+					width="220">
+				<template slot-scope="scope">
+					<el-button
+							size="mini"
+							type="primary"
+							@click="handleView(scope.row)">查看</el-button>
+					<el-button
+							size="mini"
+							@click="handleEdit(scope.row)">编辑</el-button>
+					<el-button
+							size="mini"
+							type="danger"
+							@click="handleDelete(scope.row)">删除</el-button>
+				</template>
+			</el-table-column>
+		</el-table>
 
-		<script type="text/html" id="barDemo">
-  <a class="layui-btn layui-btn-normal layui-btn-sm" lay-event="detail">查看</a>
-  <a class="layui-btn layui-btn-sm" lay-event="edit">编辑</a>
-  <a class="layui-btn layui-btn-danger layui-btn-sm" lay-event="del">删除</a>
-	</script>
-		<hr></hr>
-		<h5 style="text-align: center;">@2018.学生单科成绩管理系统</h5>
+		<!-- 分页 -->
+		<el-pagination
+				@size-change="handleSizeChange"
+				@current-change="handleCurrentChange"
+				:current-page="currentPage"
+				:page-sizes="[10, 20, 30, 50]"
+				:page-size="pageSize"
+				layout="total, sizes, prev, pager, next, jumper"
+				:total="total"
+				style="margin-top: 20px;">
+		</el-pagination>
+
+		<!-- 查看对话框 -->
+		<el-dialog title="查看成绩信息" :visible.sync="viewDialogVisible" width="30%">
+			<el-descriptions :column="1" border>
+				<el-descriptions-item label="成绩编号">{{ currentScore.scoreId }}</el-descriptions-item>
+				<el-descriptions-item label="学生姓名">{{ currentScore.studentName }}</el-descriptions-item>
+				<el-descriptions-item label="考试类型">{{ currentScore.scoreTypeName }}</el-descriptions-item>
+				<el-descriptions-item label="成绩">{{ currentScore.scoreValue }}</el-descriptions-item>
+			</el-descriptions>
+		</el-dialog>
+
+		<!-- 编辑/添加对话框 -->
+		<el-dialog :title="dialogTitle" :visible.sync="editDialogVisible" width="40%">
+			<el-form :model="form" :rules="rules" ref="form" label-width="100px">
+				<el-form-item label="学生" prop="studentId">
+					<el-select v-model="form.studentId" placeholder="请选择学生" filterable>
+						<el-option
+								v-for="item in students"
+								:key="item.studentId"
+								:label="item.studentName"
+								:value="item.studentId">
+						</el-option>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="考试类型" prop="scoreType">
+					<el-select v-model="form.scoreType" placeholder="请选择考试类型">
+						<el-option label="习题" value="1"></el-option>
+						<el-option label="测验" value="2"></el-option>
+						<el-option label="考试成绩" value="3"></el-option>
+					</el-select>
+				</el-form-item>
+				<el-form-item label="成绩" prop="scoreValue">
+					<el-input-number v-model="form.scoreValue" :min="0" :max="100"></el-input-number>
+				</el-form-item>
+			</el-form>
+			<div slot="footer" class="dialog-footer">
+				<el-button @click="editDialogVisible = false">取 消</el-button>
+				<el-button type="primary" @click="submitForm">确 定</el-button>
+			</div>
+		</el-dialog>
 	</div>
-	<script src="admin/layui/layui.all.js" type="text/javascript"
-		charset="utf-8"></script>
-</body>
+</div>
 
+<script src="js/Vue.main.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="js/axios.js"></script>
+
+<script>
+	new Vue({
+		el: '#app',
+		data() {
+			return {
+				flag : false,
+				searchName: '',
+				tableData: [],
+				currentPage: 1,
+				pageSize: 10,
+				total: 0,
+				viewDialogVisible: false,
+				editDialogVisible: false,
+				dialogTitle: '',
+				currentScore: {},
+				form: {
+					id: '',
+					studentId: '',
+					scoreType: '',
+					scoreValue: ''
+				},
+				//students: [], // 学生列表
+				rules: {
+					studentId: [
+						{ required: true, message: '请选择学生', trigger: 'change' }
+					],
+					scoreType: [
+						{ required: true, message: '请选择考试类型', trigger: 'change' }
+					],
+					scoreValue: [
+						{ required: true, message: '请输入成绩', trigger: 'blur' }
+					]
+				}
+			}
+		},
+		created() {
+			//
+			this.fetchData();
+		},
+		methods: {
+			// 查询出所有的学生成绩表的内容
+			fetchData(){
+				// todo:发送请求，注意要多表联查
+
+			},
+
+			// todo:模糊查询
+			handleSearch(){
+				// 根据用户名
+				// studentName:this.searchName 与前端保持一致
+			},
+
+			handleAdd() {
+				this.dialogTitle = '添加成绩信息';
+				this.form = {
+					id: '',
+					studentId: '',
+					scoreType: '',
+					scoreValue: ''
+				};
+				this.flag = true;
+				this.editDialogVisible = true;
+			},
+
+			handleView(row) {
+				this.currentScore = row;
+				this.viewDialogVisible = true;
+			},
+
+			handleEdit(row) {
+				this.dialogTitle = '编辑成绩信息';
+				this.form = {
+					id: row.scoreId,
+					studentId: row.studentId,
+					scoreType: row.scoreType,
+					scoreValue: row.scoreValue
+				};
+				this.editDialogVisible = true;
+			},
+
+			// 删除成绩
+			handleDelete(row) {
+				this.$confirm('确认删除该成绩记录?', '提示', {
+					confirmButtonText: '确定',
+					cancelButtonText: '取消',
+					type: 'warning'
+				}).then(() => {
+					/*如果用户点击的是确定就发送请求*/
+					// row.studentId
+					//todo:根据学生id/学号删除
+				}).catch(() => {
+					this.$message.info('已取消删除'); // 上面删除成功可以用这个，修改下内容
+				});
+			},
+
+			// 添加或编辑的操作
+			submitForm() {
+				// 也要判断用户是修改还是添加操作
+				if(this.flag){
+					// 添加操作
+					// this.form.scoreValue 获取数据
+					// todo:
+				}else{
+					// 编辑操作 | 修改 根据 学号修改
+					// this.form.studentId
+					// todo:
+				}
+			},
+
+			// 下面是分页用到的目前还没有做
+
+			handleSizeChange(val) {
+				this.pageSize = val;
+				this.fetchData();
+			},
+
+			// 当前页
+			handleCurrentChange(val) {
+				this.currentPage = val;
+				this.fetchData();
+			},
+
+			handleSelectionChange(val) {
+				this.multipleSelection = val;
+			}
+		}
+	});
+</script>
+</body>
 </html>

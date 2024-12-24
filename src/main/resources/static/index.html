@@ -143,6 +143,7 @@
 			}
 		},
 		methods: {
+			// 退出系统功能
 			handleSelect(key) {
 				if (key === 'logout') {
 					this.handleLogout();
@@ -208,14 +209,17 @@
 				}
 			},
 
+			// 退出系统
 			handleLogout() {
 				this.$confirm('确认退出系统吗?', '提示', {
 					confirmButtonText: '确定',
 					cancelButtonText: '取消',
 					type: 'warning'
 				}).then(() => {
-					window.location.href = '/loginOut';
-				}).catch(() => {});
+					window.location.href = 'login.html';
+				}).catch(() => {
+
+				});
 			}
 		}
 	});
